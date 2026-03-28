@@ -1,40 +1,79 @@
 let socket;
-let drawings = [];
+let circles = [];
+let tokens = [];
+let explosions = [];
+
+let selected = null;
+let blurEffect = false;
 
 function setup() {
   createCanvas(800, 600);
-  background(255);
-
   socket = io();
 
-  // Receive full drawing
-  socket.on("init", (data) => {
-    drawings = data;
+  socket.on("init", data => {
+    circles = data.circles;
+    tokens = data.tokens;
   });
 
-  // Receive new drawing from others
-  socket.on("draw", (data) => {
-    drawings.push(data);
+  socket.on("state", data => {
+    circles = data.circles;
+    tokens = data.tokens;
+    explosions = data.explosions;
+  });
+
+  socket.on("blur", val => {
+    blurEffect = val;
   });
 }
 
 function draw() {
   background(255);
 
-  // Draw all lines
-  for (let d of drawings) {
-    line(d.x1, d.y1, d.x2, d.y2);
+  if (blurEffect) {
+    drawingContext.filter = "blur(8px)";
+  } else {
+    drawingContext.filter = "none";
   }
+
+  // --- tokens ---
+  fill("blue");
+  noStroke();
+  tokens.forEach(t => {
+    circle(t.x, t.y, 15);
+  });
+
+  // --- circles ---
+  circles.forEach(c => {
+    fill(c.color);
+    circle(c.x, c.y, 40);
+  });
+
+  // --- explosions ---
+  explosions.forEach(e => {
+    fill(255, 150, 0, 150);
+    circle(e.x, e.y, 60);
+  });
 }
 
-function mouseDragged() {
-  let data = {
-    x1: mouseX,
-    y1: mouseY,
-    x2: pmouseX,
-    y2: pmouseY
-  };
+function mousePressed() {
+  circles.forEach(c => {
+    let d = dist(mouseX, mouseY, c.x, c.y);
+    if (d < 20) {
+      selected = c.id;
+      socket.emit("select", c.id);
+    }
+  });
+}
 
-  drawings.push(data);     // draw locally
-  socket.emit("draw", data); // send to server
+function keyPressed() {
+  if (selected === null) return;
+
+  let dx = 0, dy = 0;
+
+  if (keyCode === LEFT_ARROW) dx = -5;
+  if (keyCode === RIGHT_ARROW) dx = 5;
+  if (keyCode === UP_ARROW) dy = -5;
+  if (keyCode === DOWN_ARROW) dy = 5;
+
+  socket.emit("move", { id: selected, dx, dy });
 }
