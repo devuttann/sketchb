@@ -35,6 +35,19 @@ function draw() {
     drawingContext.filter = "none";
   }
 
+  if (selected !== null) {
+    let dx = 0, dy = 0;
+
+    if (keyIsDown(LEFT_ARROW)) dx = -5;
+    if (keyIsDown(RIGHT_ARROW)) dx = 5;
+    if (keyIsDown(UP_ARROW)) dy = -5;
+    if (keyIsDown(DOWN_ARROW)) dy = 5;
+
+    if (dx !== 0 || dy !== 0) {
+      socket.emit("move", { id: selected, dx, dy });
+    }
+  }
+
   fill("blue");
   noStroke();
   tokens.forEach(t => {
