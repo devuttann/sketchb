@@ -35,20 +35,17 @@ function draw() {
     drawingContext.filter = "none";
   }
 
-  // --- tokens ---
   fill("blue");
   noStroke();
   tokens.forEach(t => {
     circle(t.x, t.y, 15);
   });
 
-  // --- circles ---
   circles.forEach(c => {
     fill(c.color);
     circle(c.x, c.y, 40);
   });
 
-  // --- explosions ---
   explosions.forEach(e => {
     fill(255, 150, 0, 150);
     circle(e.x, e.y, 60);
